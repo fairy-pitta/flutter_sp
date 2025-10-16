@@ -91,4 +91,35 @@ class NativeBridge {
   static String getLastError() {
     return 'No error';
   }
+  
+  // OpenGL Texture Renderer Functions
+  static int initTextureRenderer(int width, int height, int numMelBands) {
+    // Mock implementation - return success
+    return 0;
+  }
+  
+  static int updateTextureColumn(Float32List melData) {
+    // Mock implementation - return success
+    return 0;
+  }
+  
+  static int getTextureId() {
+    // Mock implementation - return a fake texture ID
+    return 12345;
+  }
+  
+  static String getTextureData() {
+    // Mock implementation
+    return 'Mock texture data';
+  }
+  
+  static int setTextureColorMap(int colorMapType) {
+    // Mock implementation - return success
+    return 0;
+  }
+  
+  static int setTextureMinMax(double minValue, double maxValue) {
+    // Mock implementation - return success
+    return 0;
+  }
 }

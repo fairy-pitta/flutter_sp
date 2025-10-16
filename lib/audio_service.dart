@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
-import 'native_bridge.dart';
+import 'native_bridge_wrapper.dart';
 
 enum AudioFormat {
   s16le(0),
@@ -81,6 +81,11 @@ class AudioService extends ChangeNotifier {
   final StreamController<Float32List> _melStreamController = StreamController<Float32List>.broadcast();
   final StreamController<AudioProcessingStats> _statsStreamController = StreamController<AudioProcessingStats>.broadcast();
   
+  // OpenGL texture renderer
+  bool _useOpenGL = true;
+  int? _textureId;
+  bool _textureInitialized = false;
+  
   AudioService({
     AudioConfig? audioConfig,
     MelConfig? melConfig,
@@ -124,7 +129,7 @@ class AudioService extends ChangeNotifier {
           'bufferSize=${_config.bufferSize}, channels=${_config.channels}');
       
       // Initialize audio input
-      final audioResult = NativeBridge.initializeAudioInput(
+      final audioResult = NativeBridgeWrapper.initializeAudioInput(
         sampleRate: _config.sampleRate,
         bufferSize: _config.bufferSize,
         channels: _config.channels,
@@ -132,14 +137,14 @@ class AudioService extends ChangeNotifier {
       );
       
       if (audioResult != 0) {
-        throw Exception('Failed to initialize audio input: ${NativeBridge.getLastError()}');
+        throw Exception('Failed to initialize audio input: ${NativeBridgeWrapper.getLastError()}');
       }
       
       _logger.info('Initializing mel processor with config: numFilters=${_melConfig.numFilters}, '
           'minFreq=${_melConfig.minFreq}, maxFreq=${_melConfig.maxFreq}');
       
       // Initialize mel processor
-      final melResult = NativeBridge.initializeMelProcessor(
+      final melResult = NativeBridgeWrapper.initializeMelProcessor(
         numFilters: _melConfig.numFilters,
         minFreq: _melConfig.minFreq,
         maxFreq: _melConfig.maxFreq,
@@ -147,7 +152,23 @@ class AudioService extends ChangeNotifier {
       );
       
       if (melResult != 0) {
-        throw Exception('Failed to initialize mel processor: ${NativeBridge.getLastError()}');
+        throw Exception('Failed to initialize mel processor: ${NativeBridgeWrapper.getLastError()}');
+      }
+      
+      // Initialize OpenGL texture renderer if enabled
+      if (_useOpenGL) {
+        _logger.info('Initializing OpenGL texture renderer: width=512, height=256, numMelBands=${_melConfig.numFilters}');
+        
+        final textureResult = NativeBridgeWrapper.initTextureRenderer(512, 256, _melConfig.numFilters);
+        
+        if (textureResult != 0) {
+          _logger.warning('Failed to initialize texture renderer: ${NativeBridgeWrapper.getLastError()}. Falling back to software rendering.');
+          _useOpenGL = false;
+        } else {
+          _textureId = NativeBridgeWrapper.getTextureId();
+          _textureInitialized = true;
+          _logger.info('OpenGL texture renderer initialized successfully, texture ID: $_textureId');
+        }
       }
       
       _state = AudioState.ready;
@@ -172,10 +193,10 @@ class AudioService extends ChangeNotifier {
     
     try {
       _logger.info('Starting audio recording');
-      final result = NativeBridge.startRecording();
+      final result = NativeBridgeWrapper.startRecording();
       
       if (result != 0) {
-        throw Exception('Failed to start recording: ${NativeBridge.getLastError()}');
+        throw Exception('Failed to start recording: ${NativeBridgeWrapper.getLastError()}');
       }
       
       _state = AudioState.recording;
@@ -204,10 +225,10 @@ class AudioService extends ChangeNotifier {
       _logger.info('Stopping audio recording');
       _stopProcessingLoop();
       
-      final result = NativeBridge.stopRecording();
+      final result = NativeBridgeWrapper.stopRecording();
       
       if (result != 0) {
-        throw Exception('Failed to stop recording: ${NativeBridge.getLastError()}');
+        throw Exception('Failed to stop recording: ${NativeBridgeWrapper.getLastError()}');
       }
       
       _state = AudioState.ready;
@@ -265,7 +286,12 @@ class AudioService extends ChangeNotifier {
       }
       
       // Process audio frame through mel spectrogram
-      final melData = NativeBridge.getMelData();
+      final melData = NativeBridgeWrapper.getMelData();
+      
+      // Update OpenGL texture if enabled
+      if (_useOpenGL && _textureInitialized) {
+        NativeBridgeWrapper.updateTextureColumn(melData);
+      }
       
       stopwatch.stop();
       
@@ -291,6 +317,44 @@ class AudioService extends ChangeNotifier {
     }
   }
   
+  // OpenGL texture renderer methods
+  int? get textureId => _textureId;
+  bool get useOpenGL => _useOpenGL;
+  bool get textureInitialized => _textureInitialized;
+  
+  void setUseOpenGL(bool useOpenGL) {
+    if (_useOpenGL == useOpenGL) return;
+    
+    if (_state == AudioState.recording) {
+      _logger.warning('Cannot change OpenGL setting while recording');
+      return;
+    }
+    
+    _useOpenGL = useOpenGL;
+    if (_useOpenGL && _state == AudioState.ready) {
+      // Reinitialize with OpenGL
+      _initializeTextureRenderer();
+    }
+    notifyListeners();
+  }
+  
+  void _initializeTextureRenderer() {
+    try {
+      final result = NativeBridgeWrapper.initTextureRenderer(512, 256, _melConfig.numFilters);
+      if (result == 0) {
+        _textureId = NativeBridgeWrapper.getTextureId();
+        _textureInitialized = true;
+        _logger.info('Texture renderer reinitialized, texture ID: $_textureId');
+      } else {
+        _logger.warning('Failed to reinitialize texture renderer: ${NativeBridgeWrapper.getLastError()}');
+        _textureInitialized = false;
+      }
+    } catch (e) {
+      _logger.warning('Error reinitializing texture renderer: $e');
+      _textureInitialized = false;
+    }
+  }
+  
   double _calculateAudioLevel(Float32List audioFrame) {
     if (audioFrame.isEmpty) return -60.0;
     
@@ -311,7 +375,7 @@ class AudioService extends ChangeNotifier {
     _stopProcessingLoop();
     
     if (_state == AudioState.recording) {
-      NativeBridge.stopRecording();
+      NativeBridgeWrapper.stopRecording();
     }
     
     // NativeBridge.dispose(); // Not needed for mock implementation

@@ -66,11 +66,38 @@ add_library(flutter_sp_native SHARED
     ${ALL_SOURCES}
 )
 
-# Set properties for shared library
-set_target_properties(flutter_sp_native PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
-    PREFIX ""
-)
+# Set properties for shared library based on platform
+if(ANDROID)
+    set_target_properties(flutter_sp_native PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+        PREFIX "lib"
+        SUFFIX ".so"
+    )
+elseif(IOS)
+    set_target_properties(flutter_sp_native PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+        PREFIX ""
+        SUFFIX ".dylib"
+    )
+elseif(APPLE)
+    set_target_properties(flutter_sp_native PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+        PREFIX "lib"
+        SUFFIX ".dylib"
+    )
+elseif(WIN32)
+    set_target_properties(flutter_sp_native PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+        PREFIX ""
+        SUFFIX ".dll"
+    )
+else()
+    set_target_properties(flutter_sp_native PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+        PREFIX "lib"
+        SUFFIX ".so"
+    )
+endif()
 
 # Link libraries for shared library
 target_link_libraries(flutter_sp_native ${OPENGL_LIBRARIES})
@@ -87,6 +114,22 @@ elseif(IOS)
     find_library(FOUNDATION_LIB Foundation)
     find_library(AUDIO_TOOLBOX_LIB AudioToolbox)
     target_link_libraries(flutter_sp_native ${FOUNDATION_LIB} ${AUDIO_TOOLBOX_LIB})
+endif()
+
+# Silence OpenGL deprecation warnings on macOS
+if(APPLE)
+    target_compile_definitions(flutter_sp_native PRIVATE GL_SILENCE_DEPRECATION)
+endif()
+
+# Add Flutter-specific compilation flags
+if(ANDROID)
+    target_compile_definitions(flutter_sp_native PRIVATE FLUTTER_ANDROID)
+elseif(IOS)
+    target_compile_definitions(flutter_sp_native PRIVATE FLUTTER_IOS)
+elseif(APPLE)
+    target_compile_definitions(flutter_sp_native PRIVATE FLUTTER_MACOS)
+elseif(WIN32)
+    target_compile_definitions(flutter_sp_native PRIVATE FLUTTER_WINDOWS)
 endif()
 
 # Enable testing

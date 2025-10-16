@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'audio_service.dart';
 import 'audio_visualizer.dart';
+import 'opengl_audio_visualizer.dart';
+import 'native_bridge_wrapper.dart';
 
 void main() {
   runApp(const MelSpectrogramApp());
@@ -137,12 +139,19 @@ class _MainScreenState extends State<MainScreen> {
                 
                 return Padding(
                   padding: const EdgeInsets.all(16),
-                  child: WaterfallSpectrogram(
-                    melDataStream: audioService.melDataStream,
-                    numMelFilters: audioService.melConfig.numFilters,
-                    minFrequency: audioService.melConfig.minFreq,
-                    maxFrequency: audioService.melConfig.maxFreq,
-                  ),
+                  child: audioService.useOpenGL && audioService.textureInitialized
+                      ? OpenGLAudioVisualizer(
+                          melDataStream: audioService.melDataStream,
+                          width: 512,
+                          height: 256,
+                          numMelBands: audioService.melConfig.numFilters,
+                        )
+                      : WaterfallSpectrogram(
+                          melDataStream: audioService.melDataStream,
+                          numMelFilters: audioService.melConfig.numFilters,
+                          minFrequency: audioService.melConfig.minFreq,
+                          maxFrequency: audioService.melConfig.maxFreq,
+                        ),
                 );
               },
             ),
@@ -216,6 +225,48 @@ class _MainScreenState extends State<MainScreen> {
                   title: const Text('Max Frequency'),
                   subtitle: Text('${audioService.melConfig.maxFreq} Hz'),
                 ),
+                SwitchListTile(
+                  title: const Text('Use Native FFI'),
+                  subtitle: Text(
+                    NativeBridgeWrapper.mode == BridgeMode.real
+                      ? 'Native C++ (Real-time)'
+                      : 'Mock Implementation',
+                  ),
+                  value: NativeBridgeWrapper.mode == BridgeMode.real,
+                  onChanged: (value) async {
+                    if (audioService.isRecording) {
+                      await audioService.stopRecording();
+                    }
+                    audioService.dispose();
+                    
+                    NativeBridgeWrapper.setMode(value ? BridgeMode.real : BridgeMode.mock);
+                    
+                    Navigator.pop(context);
+                    await Future.delayed(const Duration(milliseconds: 100));
+                    await _initializeAudio();
+                    
+                    _showSettingsDialog();
+                  },
+                ),
+                SwitchListTile(
+                  title: const Text('Use OpenGL Rendering'),
+                  subtitle: Text(
+                    audioService.useOpenGL 
+                      ? 'GPU-accelerated (OpenGL)'
+                      : 'Software rendering (CustomPaint)',
+                  ),
+                  value: audioService.useOpenGL,
+                  onChanged: (value) {
+                    audioService.setUseOpenGL(value);
+                    Navigator.pop(context);
+                    _showSettingsDialog();
+                  },
+                ),
+                if (audioService.textureInitialized)
+                  ListTile(
+                    title: const Text('Texture ID'),
+                    subtitle: Text('${audioService.textureId}'),
+                  ),
               ],
             );
           },

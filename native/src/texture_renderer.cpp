@@ -60,24 +60,14 @@ TextureRenderer::TextureRenderer(int width, int height, int numMelBands)
     
     textureData_.resize(width_ * height_ * 4, 0); // RGBA format
     ringBuffer_.resize(width_ * numMelBands_ * 4, 0); // RGBA format
-    mockTextureData_.resize(width_ * height_ * 4, 0);
-    
-    // Initialize mock texture data with alpha = 255 for all pixels
-    for (int i = 0; i < width_ * height_; ++i) {
-        mockTextureData_[i * 4 + 3] = 255; // Alpha channel
-    }
     
     createColorMaps();
     
-    // Initialize in mock mode by default - actual OpenGL initialization
-    // should be done explicitly when an OpenGL context is available
-    mockMode_ = true;
-    initialized_ = true;  // Allow operation in mock mode
-    std::cout << "TextureRenderer initialized in mock mode (no OpenGL context)" << std::endl;
+    std::cout << "TextureRenderer initialized for OpenGL rendering" << std::endl;
 }
 
 TextureRenderer::~TextureRenderer() {
-    if (!mockMode_) {
+    if (initialized_ && !mockMode_) {
         cleanupOpenGL();
     }
 }
@@ -306,12 +296,12 @@ std::vector<uint8_t> TextureRenderer::getTextureData() const {
     
     std::vector<uint8_t> data(width_ * height_ * 4);
     
-    if (!mockMode_) {
+    if (!mockMode_ && textureId_ != 0) {
         glBindTexture(GL_TEXTURE_2D, textureId_);
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.data());
     } else {
-        // In mock mode, return the mock texture data
-        data = mockTextureData_;
+        // Fallback to internal texture data
+        data = textureData_;
     }
     
     return data;
