@@ -1,0 +1,49 @@
+# Flutter / Dart
+.dart_tool/
+.packages
+.pub-cache/
+.flutter-plugins
+.flutter-plugins-dependencies
+# Generated build outputs
+build/
+# Lockfile (ignore for app projects; commit for packages)
+pubspec.lock
+
+# IDE / OS
+.vscode/
+.idea/
+*.iml
+.DS_Store
+
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+*.keystore
+
+# iOS / Xcode
+ios/Pods/
+ios/DerivedData/
+*.xcworkspace/
+*.xcuserstate
+*.xccheckout
+**/*.pbxuser
+**/*.mode1v3
+**/*.mode2v3
+
+# Coverage
+coverage/
+lcov.info
+
+# Native C++ build artifacts
+native/build/
+**/*.o
+**/*.obj
+**/*.so
+**/*.dll
+**/*.dylib
+**/*.a
+**/*.lib
+**/*.exe
+**/*.out
+**/*.log
