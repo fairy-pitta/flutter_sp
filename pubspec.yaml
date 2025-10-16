@@ -17,5 +17,9 @@ dependencies:
   ffi: ^2.1.0
   logging: ^1.2.0
 
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
 flutter:
   uses-material-design: true

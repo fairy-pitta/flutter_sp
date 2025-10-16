@@ -57,12 +57,18 @@ class AudioProcessingStats {
   int framesDropped;
   double averageProcessingTime;
   double currentFps;
+  double audioLevel;
+  int textureUpdates;
+  double lastFrameTime;
   
   AudioProcessingStats({
     this.framesProcessed = 0,
     this.framesDropped = 0,
     this.averageProcessingTime = 0.0,
     this.currentFps = 0.0,
+    this.audioLevel = -60.0,
+    this.textureUpdates = 0,
+    this.lastFrameTime = 0.0,
   });
 }
 
@@ -75,8 +81,11 @@ class AudioService extends ChangeNotifier {
   AudioProcessingStats _stats = AudioProcessingStats();
   String? _error;
   double? _audioLevel;
+  
+  // Real audio processing
   Timer? _processingTimer;
-  Timer? _statsTimer;
+  Float32List? _currentAudioFrame;
+  int _frameCounter = 0;
   
   final StreamController<Float32List> _melStreamController = StreamController<Float32List>.broadcast();
   final StreamController<AudioProcessingStats> _statsStreamController = StreamController<AudioProcessingStats>.broadcast();
@@ -276,34 +285,43 @@ class AudioService extends ChangeNotifier {
   }
   
   void _processAudioFrame() {
+    final frameStopwatch = Stopwatch()..start();
+    
     try {
-      final stopwatch = Stopwatch()..start();
-      
-      // Generate mock audio data for testing (replace with actual audio capture)
-      final mockAudioData = Float32List(_config.bufferSize);
-      for (int i = 0; i < mockAudioData.length; i++) {
-        mockAudioData[i] = (i % 100) * 0.01; // Simple ramp for testing
+      // Get real audio frame from native bridge
+      final audioFrame = _captureAudioFrame();
+      if (audioFrame == null || audioFrame.isEmpty) {
+        _stats.framesDropped++;
+        return;
       }
       
+      _currentAudioFrame = audioFrame;
+      _frameCounter++;
+      
       // Process audio frame through mel spectrogram
-      final melData = NativeBridgeWrapper.getMelData();
+      final melData = _processMelSpectrogram(audioFrame);
+      if (melData == null || melData.isEmpty) {
+        _stats.framesDropped++;
+        return;
+      }
       
       // Update OpenGL texture if enabled
       if (_useOpenGL && _textureInitialized) {
-        NativeBridgeWrapper.updateTextureColumn(melData);
+        final textureStopwatch = Stopwatch()..start();
+        final success = NativeBridgeWrapper.updateTextureColumn(melData, _frameCounter % 512);
+        textureStopwatch.stop();
+        
+        if (success == 1) {
+          _stats.textureUpdates++;
+        } else {
+          _logger.warning('Failed to update texture: ${NativeBridgeWrapper.getLastError()}');
+        }
       }
       
-      stopwatch.stop();
+      frameStopwatch.stop();
       
       // Update statistics
-      _stats.framesProcessed++;
-      _stats.averageProcessingTime = 
-          (_stats.averageProcessingTime * (_stats.framesProcessed - 1) + stopwatch.elapsedMicroseconds) / 
-          _stats.framesProcessed;
-      _stats.currentFps = 1000000.0 / _stats.averageProcessingTime;
-      
-      // Calculate audio level
-      _audioLevel = _calculateAudioLevel(mockAudioData);
+      _updateStats(frameStopwatch.elapsedMicroseconds);
       
       // Stream mel data
       _melStreamController.add(melData);
@@ -314,6 +332,56 @@ class AudioService extends ChangeNotifier {
     } catch (e) {
       _stats.framesDropped++;
       _logger.warning('Failed to process audio frame: $e');
+    }
+  }
+  
+  Float32List? _captureAudioFrame() {
+    try {
+      // Capture audio frame from native bridge
+      final audioFrame = NativeBridgeWrapper.getAudioFrame();
+      return audioFrame;
+    } catch (e) {
+      _logger.warning('Failed to capture audio frame: $e');
+      return null;
+    }
+  }
+  
+  Float32List? _processMelSpectrogram(Float32List audioFrame) {
+    try {
+      // Process audio frame through mel spectrogram
+      final success = NativeBridgeWrapper.processAudioFrame() == 1;
+      if (!success) {
+        _logger.warning('Failed to process audio frame: ${NativeBridgeWrapper.getLastError()}');
+        return null;
+      }
+      
+      // Get mel data
+      final melData = NativeBridgeWrapper.getMelData();
+      return melData;
+    } catch (e) {
+      _logger.warning('Failed to process mel spectrogram: $e');
+      return null;
+    }
+  }
+  
+  void _updateStats(int frameTimeMicroseconds) {
+    _stats.framesProcessed++;
+    _stats.lastFrameTime = frameTimeMicroseconds / 1000.0; // Convert to milliseconds
+    
+    // Calculate moving average processing time
+    if (_stats.averageProcessingTime == 0.0) {
+      _stats.averageProcessingTime = frameTimeMicroseconds.toDouble();
+    } else {
+      _stats.averageProcessingTime = 
+          (_stats.averageProcessingTime * 0.9) + (frameTimeMicroseconds * 0.1);
+    }
+    
+    // Calculate FPS
+    _stats.currentFps = 1000000.0 / _stats.averageProcessingTime;
+    
+    // Calculate audio level from current frame
+    if (_currentAudioFrame != null) {
+      _stats.audioLevel = _calculateAudioLevel(_currentAudioFrame!);
     }
   }
   

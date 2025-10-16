@@ -134,13 +134,21 @@ class NativeBridgeWrapper {
     }
   }
   
-  static int updateTextureColumn(Float32List melData) {
+  static int updateTextureColumn(Float32List melData, [int column = 0]) {
     if (_mode == BridgeMode.real && _realAvailable) {
       return real.NativeBridgeReal.updateTextureColumn(melData);
     } else {
-      return mock.NativeBridge.updateTextureColumn(melData);
+      return mock.NativeBridge.updateTextureColumn(melData, column);
     }
   }
+  
+  static Float32List? getAudioFrame() {
+      if (_mode == BridgeMode.real && _realAvailable) {
+        return real.NativeBridgeReal.getAudioFrame();
+      } else {
+        return mock.NativeBridge.getAudioFrame();
+      }
+    }
   
   static int getTextureId() {
     if (_mode == BridgeMode.real && _realAvailable) {

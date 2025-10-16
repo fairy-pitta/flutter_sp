@@ -279,4 +279,15 @@ class NativeBridgeReal {
     if (!_initialized) return -1;
     return _setTextureMinMax!(minValue, maxValue);
   }
+  
+  static Float32List? getAudioFrame() {
+    if (!_initialized) return null;
+    
+    // Generate mock audio frame data for now
+    final frame = Float32List(1024);
+    for (int i = 0; i < frame.length; i++) {
+      frame[i] = math.sin(i * 0.1) * 0.5 + math.Random().nextDouble() * 0.1;
+    }
+    return frame;
+  }
 }

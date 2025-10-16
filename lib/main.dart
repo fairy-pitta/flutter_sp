@@ -4,6 +4,7 @@ import 'audio_service.dart';
 import 'audio_visualizer.dart';
 import 'opengl_audio_visualizer.dart';
 import 'native_bridge_wrapper.dart';
+import 'settings_panel.dart';
 
 void main() {
   runApp(const MelSpectrogramApp());
@@ -198,86 +199,7 @@ class _MainScreenState extends State<MainScreen> {
   void _showSettingsDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Settings'),
-        content: Consumer<AudioService>(
-          builder: (context, audioService, child) {
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  title: const Text('Sample Rate'),
-                  subtitle: Text('${audioService.config.sampleRate} Hz'),
-                ),
-                ListTile(
-                  title: const Text('Buffer Size'),
-                  subtitle: Text('${audioService.config.bufferSize} samples'),
-                ),
-                ListTile(
-                  title: const Text('Mel Filters'),
-                  subtitle: Text('${audioService.melConfig.numFilters}'),
-                ),
-                ListTile(
-                  title: const Text('Min Frequency'),
-                  subtitle: Text('${audioService.melConfig.minFreq} Hz'),
-                ),
-                ListTile(
-                  title: const Text('Max Frequency'),
-                  subtitle: Text('${audioService.melConfig.maxFreq} Hz'),
-                ),
-                SwitchListTile(
-                  title: const Text('Use Native FFI'),
-                  subtitle: Text(
-                    NativeBridgeWrapper.mode == BridgeMode.real
-                      ? 'Native C++ (Real-time)'
-                      : 'Mock Implementation',
-                  ),
-                  value: NativeBridgeWrapper.mode == BridgeMode.real,
-                  onChanged: (value) async {
-                    if (audioService.isRecording) {
-                      await audioService.stopRecording();
-                    }
-                    audioService.dispose();
-                    
-                    NativeBridgeWrapper.setMode(value ? BridgeMode.real : BridgeMode.mock);
-                    
-                    Navigator.pop(context);
-                    await Future.delayed(const Duration(milliseconds: 100));
-                    await _initializeAudio();
-                    
-                    _showSettingsDialog();
-                  },
-                ),
-                SwitchListTile(
-                  title: const Text('Use OpenGL Rendering'),
-                  subtitle: Text(
-                    audioService.useOpenGL 
-                      ? 'GPU-accelerated (OpenGL)'
-                      : 'Software rendering (CustomPaint)',
-                  ),
-                  value: audioService.useOpenGL,
-                  onChanged: (value) {
-                    audioService.setUseOpenGL(value);
-                    Navigator.pop(context);
-                    _showSettingsDialog();
-                  },
-                ),
-                if (audioService.textureInitialized)
-                  ListTile(
-                    title: const Text('Texture ID'),
-                    subtitle: Text('${audioService.textureId}'),
-                  ),
-              ],
-            );
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
+      builder: (context) => const SettingsPanel(),
     );
   }
 }

@@ -98,9 +98,28 @@ class NativeBridge {
     return 0;
   }
   
-  static int updateTextureColumn(Float32List melData) {
+  static int updateTextureColumn(Float32List melData, [int column = 0]) {
     // Mock implementation - return success
     return 0;
+  }
+  
+  static Float32List? getAudioFrame() {
+    // Generate mock audio frame
+    final audioFrame = Float32List(_bufferSize);
+    final time = DateTime.now().millisecondsSinceEpoch / 1000.0;
+    
+    for (int i = 0; i < _bufferSize; i++) {
+      final t = i / _sampleRate;
+      // Generate a complex waveform with multiple frequencies
+      audioFrame[i] = (
+        math.sin(2 * math.pi * 440 * (time + t)) * 0.3 +
+        math.sin(2 * math.pi * 880 * (time + t)) * 0.2 +
+        math.sin(2 * math.pi * 1320 * (time + t)) * 0.1 +
+        (math.Random().nextDouble() - 0.5) * 0.05 // Small amount of noise
+      );
+    }
+    
+    return audioFrame;
   }
   
   static int getTextureId() {
