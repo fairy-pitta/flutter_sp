@@ -21,6 +21,7 @@ set(SOURCES
     src/mel_filter.cpp
     src/mel_filter_bank.cpp
     src/fft_processor.cpp
+    src/mel_spectrogram.cpp
     src/kiss_fft.c
 )
 
@@ -28,14 +29,17 @@ set(SOURCES
 add_executable(mel_filter_test test/mel_filter_test.cpp ${SOURCES})
 add_executable(mel_filter_bank_test test/mel_filter_bank_test.cpp ${SOURCES})
 add_executable(fft_processor_test test/fft_processor_test.cpp ${SOURCES})
+add_executable(mel_spectrogram_test test/mel_spectrogram_test.cpp ${SOURCES})
 
 # Link Google Test
 target_link_libraries(mel_filter_test gtest gtest_main)
 target_link_libraries(mel_filter_bank_test gtest gtest_main)
 target_link_libraries(fft_processor_test gtest gtest_main)
+target_link_libraries(mel_spectrogram_test gtest gtest_main)
 
 # Enable testing
 enable_testing()
 add_test(NAME mel_filter_test COMMAND mel_filter_test)
 add_test(NAME mel_filter_bank_test COMMAND mel_filter_bank_test)
 add_test(NAME fft_processor_test COMMAND fft_processor_test)
+add_test(NAME mel_spectrogram_test COMMAND mel_spectrogram_test)

@@ -43,7 +43,7 @@ MelSpectrogramProcessor::~MelSpectrogramProcessor() {
 }
 
 bool MelSpectrogramProcessor::processAudioFrame(const int16_t* input, size_t inputSize) {
-    if (inputSize != static_cast<size_t>(config_.frameSize)) {
+    if (input == nullptr || inputSize != static_cast<size_t>(config_.frameSize)) {
         return false;
     }
     
@@ -120,10 +120,14 @@ void MelSpectrogramProcessor::convertToLogScale() {
 
 void MelSpectrogramProcessor::applyColorMapping() {
     for (int i = 0; i < config_.numMelBands; ++i) {
-        float normalizedValue = std::clamp(melSpectrum_[i], 0.0f, 1.0f);
+        float normalizedValue = melSpectrum_[i];
+        if (normalizedValue < 0.0f) normalizedValue = 0.0f;
+        if (normalizedValue > 1.0f) normalizedValue = 1.0f;
         int colorIndex = static_cast<int>(normalizedValue * (colorMap_.size() - 1));
         
-        const auto& [r, g, b] = colorMap_[colorIndex];
+        uint8_t r = std::get<0>(colorMap_[colorIndex]);
+        uint8_t g = std::get<1>(colorMap_[colorIndex]);
+        uint8_t b = std::get<2>(colorMap_[colorIndex]);
         colorMappedData_[i * 4 + 0] = r;     // R
         colorMappedData_[i * 4 + 1] = g;     // G
         colorMappedData_[i * 4 + 2] = b;     // B
@@ -200,15 +204,47 @@ void MelSpectrogramProcessor::resetStats() {
     frameCount_ = 0;
 }
 
+void MelSpectrogramProcessor::updateConfig(const AudioConfig& config) {
+    config_ = config;
+    
+    // Reinitialize buffers with new config
+    windowFunction_.resize(config_.frameSize);
+    fftInput_.resize(config_.frameSize);
+    fftOutput_.resize(config_.frameSize);
+    powerSpectrum_.resize(config_.frameSize / 2 + 1);
+    melSpectrum_.resize(config_.numMelBands);
+    colorMappedData_.resize(config_.numMelBands * 4); // RGBA
+    
+    // Recreate window function and filter bank
+    createWindowFunction();
+    createMelFilterBank();
+}
+
+void MelSpectrogramProcessor::setColorMap(const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& colormap) {
+    colorMap_ = colormap;
+}
+
 // Color map creation functions
 std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> createViridisColorMap() {
     std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> colormap(256);
     
     for (int i = 0; i < 256; ++i) {
         float t = i / 255.0f;
-        uint8_t r = static_cast<uint8_t>(std::clamp(68.0f + t * (59.0f - 68.0f), 0.0f, 255.0f));
-        uint8_t g = static_cast<uint8_t>(std::clamp(1.0f + t * (184.0f - 1.0f), 0.0f, 255.0f));
-        uint8_t b = static_cast<uint8_t>(std::clamp(84.0f + t * (56.0f - 84.0f), 0.0f, 255.0f));
+        float r_val = 68.0f + t * (59.0f - 68.0f);
+        float g_val = 1.0f + t * (184.0f - 1.0f);
+        float b_val = 84.0f + t * (56.0f - 84.0f);
+        
+        // Manual clamping
+        if (r_val < 0.0f) r_val = 0.0f;
+        if (r_val > 255.0f) r_val = 255.0f;
+        if (g_val < 0.0f) g_val = 0.0f;
+        if (g_val > 255.0f) g_val = 255.0f;
+        if (b_val < 0.0f) b_val = 0.0f;
+        if (b_val > 255.0f) b_val = 255.0f;
+        
+        uint8_t r = static_cast<uint8_t>(r_val);
+        uint8_t g = static_cast<uint8_t>(g_val);
+        uint8_t b = static_cast<uint8_t>(b_val);
         colormap[i] = std::make_tuple(r, g, b);
     }
     
