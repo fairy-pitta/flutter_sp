@@ -14,17 +14,8 @@ dependencies:
   permission_handler: ^11.0.1
   path_provider: ^2.1.1
   provider: ^6.1.1
+  ffi: ^2.1.0
+  logging: ^1.2.0
 
 flutter:
   uses-material-design: true
-  
-  assets:
-    - assets/images/
-    - assets/shaders/
-
-  fonts:
-    - family: SFProDisplay
-      fonts:
-        - asset: fonts/SFProDisplay-Regular.ttf
-        - asset: fonts/SFProDisplay-Bold.ttf
-          weight: 700

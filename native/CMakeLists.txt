@@ -60,6 +60,35 @@ if(APPLE)
     target_compile_definitions(texture_renderer_test PRIVATE GL_SILENCE_DEPRECATION)
 endif()
 
+# Flutter shared library
+add_library(flutter_sp_native SHARED
+    src/flutter_sp_native.cpp
+    ${ALL_SOURCES}
+)
+
+# Set properties for shared library
+set_target_properties(flutter_sp_native PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+    PREFIX ""
+)
+
+# Link libraries for shared library
+target_link_libraries(flutter_sp_native ${OPENGL_LIBRARIES})
+if(GLES3_LIB)
+    target_link_libraries(flutter_sp_native ${GLES3_LIB})
+endif()
+
+# Platform-specific linking
+if(ANDROID)
+    find_library(ANDROID_LIB android)
+    find_library(LOG_LIB log)
+    target_link_libraries(flutter_sp_native ${ANDROID_LIB} ${LOG_LIB})
+elseif(IOS)
+    find_library(FOUNDATION_LIB Foundation)
+    find_library(AUDIO_TOOLBOX_LIB AudioToolbox)
+    target_link_libraries(flutter_sp_native ${FOUNDATION_LIB} ${AUDIO_TOOLBOX_LIB})
+endif()
+
 # Enable testing
 enable_testing()
 add_test(NAME mel_filter_test COMMAND mel_filter_test)
