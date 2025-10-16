@@ -185,6 +185,19 @@ mel_filter_test/fast:
 .PHONY : mel_filter_test/fast
 
 #=============================================================================
+# Target rules for targets named mel_filter_bank_test
+
+# Build rule for target.
+mel_filter_bank_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 mel_filter_bank_test
+.PHONY : mel_filter_bank_test
+
+# fast build rule for target.
+mel_filter_bank_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mel_filter_bank_test.dir/build.make CMakeFiles/mel_filter_bank_test.dir/build
+.PHONY : mel_filter_bank_test/fast
+
+#=============================================================================
 # Target rules for targets named gmock
 
 # Build rule for target.
@@ -242,6 +255,7 @@ src/mel_filter.o: src/mel_filter.cpp.o
 # target to build an object file
 src/mel_filter.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mel_filter_test.dir/build.make CMakeFiles/mel_filter_test.dir/src/mel_filter.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mel_filter_bank_test.dir/build.make CMakeFiles/mel_filter_bank_test.dir/src/mel_filter.cpp.o
 .PHONY : src/mel_filter.cpp.o
 
 src/mel_filter.i: src/mel_filter.cpp.i
@@ -250,6 +264,7 @@ src/mel_filter.i: src/mel_filter.cpp.i
 # target to preprocess a source file
 src/mel_filter.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mel_filter_test.dir/build.make CMakeFiles/mel_filter_test.dir/src/mel_filter.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mel_filter_bank_test.dir/build.make CMakeFiles/mel_filter_bank_test.dir/src/mel_filter.cpp.i
 .PHONY : src/mel_filter.cpp.i
 
 src/mel_filter.s: src/mel_filter.cpp.s
@@ -258,7 +273,59 @@ src/mel_filter.s: src/mel_filter.cpp.s
 # target to generate assembly for a file
 src/mel_filter.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mel_filter_test.dir/build.make CMakeFiles/mel_filter_test.dir/src/mel_filter.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mel_filter_bank_test.dir/build.make CMakeFiles/mel_filter_bank_test.dir/src/mel_filter.cpp.s
 .PHONY : src/mel_filter.cpp.s
+
+src/mel_filter_bank.o: src/mel_filter_bank.cpp.o
+.PHONY : src/mel_filter_bank.o
+
+# target to build an object file
+src/mel_filter_bank.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mel_filter_test.dir/build.make CMakeFiles/mel_filter_test.dir/src/mel_filter_bank.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mel_filter_bank_test.dir/build.make CMakeFiles/mel_filter_bank_test.dir/src/mel_filter_bank.cpp.o
+.PHONY : src/mel_filter_bank.cpp.o
+
+src/mel_filter_bank.i: src/mel_filter_bank.cpp.i
+.PHONY : src/mel_filter_bank.i
+
+# target to preprocess a source file
+src/mel_filter_bank.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mel_filter_test.dir/build.make CMakeFiles/mel_filter_test.dir/src/mel_filter_bank.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mel_filter_bank_test.dir/build.make CMakeFiles/mel_filter_bank_test.dir/src/mel_filter_bank.cpp.i
+.PHONY : src/mel_filter_bank.cpp.i
+
+src/mel_filter_bank.s: src/mel_filter_bank.cpp.s
+.PHONY : src/mel_filter_bank.s
+
+# target to generate assembly for a file
+src/mel_filter_bank.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mel_filter_test.dir/build.make CMakeFiles/mel_filter_test.dir/src/mel_filter_bank.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mel_filter_bank_test.dir/build.make CMakeFiles/mel_filter_bank_test.dir/src/mel_filter_bank.cpp.s
+.PHONY : src/mel_filter_bank.cpp.s
+
+test/mel_filter_bank_test.o: test/mel_filter_bank_test.cpp.o
+.PHONY : test/mel_filter_bank_test.o
+
+# target to build an object file
+test/mel_filter_bank_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mel_filter_bank_test.dir/build.make CMakeFiles/mel_filter_bank_test.dir/test/mel_filter_bank_test.cpp.o
+.PHONY : test/mel_filter_bank_test.cpp.o
+
+test/mel_filter_bank_test.i: test/mel_filter_bank_test.cpp.i
+.PHONY : test/mel_filter_bank_test.i
+
+# target to preprocess a source file
+test/mel_filter_bank_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mel_filter_bank_test.dir/build.make CMakeFiles/mel_filter_bank_test.dir/test/mel_filter_bank_test.cpp.i
+.PHONY : test/mel_filter_bank_test.cpp.i
+
+test/mel_filter_bank_test.s: test/mel_filter_bank_test.cpp.s
+.PHONY : test/mel_filter_bank_test.s
+
+# target to generate assembly for a file
+test/mel_filter_bank_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mel_filter_bank_test.dir/build.make CMakeFiles/mel_filter_bank_test.dir/test/mel_filter_bank_test.cpp.s
+.PHONY : test/mel_filter_bank_test.cpp.s
 
 test/mel_filter_test.o: test/mel_filter_test.cpp.o
 .PHONY : test/mel_filter_test.o
@@ -301,10 +368,17 @@ help:
 	@echo "... gmock_main"
 	@echo "... gtest"
 	@echo "... gtest_main"
+	@echo "... mel_filter_bank_test"
 	@echo "... mel_filter_test"
 	@echo "... src/mel_filter.o"
 	@echo "... src/mel_filter.i"
 	@echo "... src/mel_filter.s"
+	@echo "... src/mel_filter_bank.o"
+	@echo "... src/mel_filter_bank.i"
+	@echo "... src/mel_filter_bank.s"
+	@echo "... test/mel_filter_bank_test.o"
+	@echo "... test/mel_filter_bank_test.i"
+	@echo "... test/mel_filter_bank_test.s"
 	@echo "... test/mel_filter_test.o"
 	@echo "... test/mel_filter_test.i"
 	@echo "... test/mel_filter_test.s"

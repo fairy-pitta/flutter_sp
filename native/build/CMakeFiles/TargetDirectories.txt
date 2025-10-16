@@ -1,4 +1,5 @@
 /Users/shuna/flutter_sp/native/build/CMakeFiles/mel_filter_test.dir
+/Users/shuna/flutter_sp/native/build/CMakeFiles/mel_filter_bank_test.dir
 /Users/shuna/flutter_sp/native/build/CMakeFiles/test.dir
 /Users/shuna/flutter_sp/native/build/CMakeFiles/edit_cache.dir
 /Users/shuna/flutter_sp/native/build/CMakeFiles/rebuild_cache.dir

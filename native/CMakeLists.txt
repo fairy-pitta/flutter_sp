@@ -18,16 +18,23 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 # Source files
 set(SOURCES
     src/mel_filter.cpp
+    src/mel_filter_bank.cpp
 )
 
-# Test executable
+# Test executables
 add_executable(mel_filter_test
     test/mel_filter_test.cpp
     ${SOURCES}
 )
 
+add_executable(mel_filter_bank_test
+    test/mel_filter_bank_test.cpp
+    ${SOURCES}
+)
+
 # Link Google Test
 target_link_libraries(mel_filter_test gtest gtest_main)
+target_link_libraries(mel_filter_bank_test gtest gtest_main)
 
 # Enable testing
 enable_testing()
