@@ -236,13 +236,13 @@ TEST_F(AudioInputTest, PlatformSpecificTest) {
     
     // Test Android platform
     AudioConfig androidConfig = config;
-    androidConfig.platform = Platform::ANDROID;
+    androidConfig.platform = Platform::Android;
     AudioInput androidInput(androidConfig);
     EXPECT_TRUE(androidInput.initialize());
     
     // Should work with different platforms
     EXPECT_EQ(iosInput.getPlatform(), Platform::IOS);
-    EXPECT_EQ(androidInput.getPlatform(), Platform::ANDROID);
+    EXPECT_EQ(androidInput.getPlatform(), Platform::Android);
 }
 
 int main(int argc, char **argv) {

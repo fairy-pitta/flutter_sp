@@ -20,7 +20,7 @@ enum class AudioFormat {
 
 enum class Platform {
     IOS,
-    ANDROID,
+    Android,
     MOCK   // For testing
 };
 

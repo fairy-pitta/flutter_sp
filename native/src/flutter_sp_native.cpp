@@ -101,7 +101,18 @@ int init_texture_renderer(int width, int height, int numMelBands) {
     try {
         std::lock_guard<std::mutex> lock(g_mutex);
         g_textureRenderer = std::make_unique<melspectrogram::TextureRenderer>(width, height, numMelBands);
-        return g_textureRenderer->initialize() ? 0 : -1;
+        
+        const bool ok = g_textureRenderer->initialize();
+        if (!ok) {
+#ifdef __APPLE__
+            strncpy(g_lastError, "OpenGL context not available on macOS. Flutter owns the GL context; using software rendering (fallback).", sizeof(g_lastError) - 1);
+#else
+            strncpy(g_lastError, "OpenGL context not available or texture creation failed.", sizeof(g_lastError) - 1);
+#endif
+            g_textureRenderer.reset();
+            return -1;
+        }
+        return 0;
     } catch (const std::exception& e) {
         strncpy(g_lastError, e.what(), sizeof(g_lastError) - 1);
         return -1;
@@ -117,7 +128,12 @@ int update_texture_column(const float* melData, int dataSize) {
     try {
         std::lock_guard<std::mutex> lock(g_mutex);
         std::vector<float> melDataVec(melData, melData + dataSize);
-        return g_textureRenderer->updateColumn(melDataVec) ? 0 : -1;
+        const bool ok = g_textureRenderer->updateColumn(melDataVec);
+        if (!ok) {
+            strncpy(g_lastError, "Failed to update texture column (invalid data size or not initialized).", sizeof(g_lastError) - 1);
+            return -1;
+        }
+        return 0;
     } catch (const std::exception& e) {
         strncpy(g_lastError, e.what(), sizeof(g_lastError) - 1);
         return -1;

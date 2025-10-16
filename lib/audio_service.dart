@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
@@ -78,7 +77,7 @@ class AudioService extends ChangeNotifier {
   AudioState _state = AudioState.idle;
   AudioConfig _config;
   MelConfig _melConfig;
-  AudioProcessingStats _stats = AudioProcessingStats();
+  final AudioProcessingStats _stats = AudioProcessingStats();
   String? _error;
   double? _audioLevel;
   
@@ -91,7 +90,7 @@ class AudioService extends ChangeNotifier {
   final StreamController<AudioProcessingStats> _statsStreamController = StreamController<AudioProcessingStats>.broadcast();
   
   // OpenGL texture renderer
-  bool _useOpenGL = true;
+  bool _useOpenGL = false;
   int? _textureId;
   bool _textureInitialized = false;
   
@@ -164,19 +163,28 @@ class AudioService extends ChangeNotifier {
         throw Exception('Failed to initialize mel processor: ${NativeBridgeWrapper.getLastError()}');
       }
       
-      // Initialize OpenGL texture renderer if enabled
+      // Initialize OpenGL texture renderer if enabled AND native library is available
       if (_useOpenGL) {
-        _logger.info('Initializing OpenGL texture renderer: width=512, height=256, numMelBands=${_melConfig.numFilters}');
-        
-        final textureResult = NativeBridgeWrapper.initTextureRenderer(512, 256, _melConfig.numFilters);
-        
-        if (textureResult != 0) {
-          _logger.warning('Failed to initialize texture renderer: ${NativeBridgeWrapper.getLastError()}. Falling back to software rendering.');
+        // Verify native library availability before enabling GPU mode
+        NativeBridgeWrapper.checkRealAvailability();
+        if (!NativeBridgeWrapper.realAvailable) {
+          _logger.warning('Native library not available on this platform. Disabling OpenGL and using software rendering.');
           _useOpenGL = false;
+          _textureInitialized = false;
         } else {
-          _textureId = NativeBridgeWrapper.getTextureId();
-          _textureInitialized = true;
-          _logger.info('OpenGL texture renderer initialized successfully, texture ID: $_textureId');
+          // Use real bridge when available
+          NativeBridgeWrapper.setMode(BridgeMode.real);
+          _logger.info('Initializing OpenGL texture renderer: width=512, height=256, numMelBands=${_melConfig.numFilters}');
+          final textureResult = NativeBridgeWrapper.initTextureRenderer(512, 256, _melConfig.numFilters);
+          if (textureResult != 0) {
+            _logger.warning('Failed to initialize texture renderer: ${NativeBridgeWrapper.getLastError()}. Falling back to software rendering.');
+            _useOpenGL = false;
+            _textureInitialized = false;
+          } else {
+            _textureId = NativeBridgeWrapper.getTextureId();
+            _textureInitialized = true;
+            _logger.info('OpenGL texture renderer initialized successfully, texture ID: $_textureId');
+          }
         }
       }
       
@@ -399,9 +407,18 @@ class AudioService extends ChangeNotifier {
     }
     
     _useOpenGL = useOpenGL;
-    if (_useOpenGL && _state == AudioState.ready) {
-      // Reinitialize with OpenGL
-      _initializeTextureRenderer();
+    if (_useOpenGL) {
+      // Only enable GPU mode when native library is available
+      NativeBridgeWrapper.checkRealAvailability();
+      if (!NativeBridgeWrapper.realAvailable) {
+        _logger.warning('Native library not available. Keeping software rendering.');
+        _useOpenGL = false;
+        _textureInitialized = false;
+      } else if (_state == AudioState.ready) {
+        // Reinitialize with OpenGL
+        NativeBridgeWrapper.setMode(BridgeMode.real);
+        _initializeTextureRenderer();
+      }
     }
     notifyListeners();
   }

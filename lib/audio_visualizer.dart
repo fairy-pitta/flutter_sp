@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:typed_data';
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
 
 class WaterfallSpectrogram extends StatefulWidget {
   final Stream<Float32List> melDataStream;
@@ -33,7 +31,6 @@ class _WaterfallSpectrogramState extends State<WaterfallSpectrogram> {
   final List<Float32List> _melHistory = [];
   final List<Color> _colorMap = [];
   
-  bool _isInitialized = false;
   String? _error;
   
   @override
@@ -76,18 +73,6 @@ class _WaterfallSpectrogramState extends State<WaterfallSpectrogram> {
         _melHistory.removeAt(0);
       }
     });
-  }
-  
-  double _normalizeMelValue(double melValue) {
-    // Apply logarithmic scaling for better visualization
-    final clampedValue = melValue.clamp(0.000001, 1.0);
-    final logValue = (20 * math.log(clampedValue) / math.ln10 + 60) / 60.0;
-    return logValue.clamp(0.0, 1.0);
-  }
-  
-  Color _getColorForMelValue(double melValue) {
-    final intensity = _normalizeMelValue(melValue);
-    return _colorMap[(intensity * 255).clamp(0, 255).round()];
   }
   
   @override
@@ -146,7 +131,7 @@ class SpectrogramPainter extends CustomPainter {
       final melData = melHistory[y];
       for (int x = 0; x < numMelFilters; x++) {
         final melValue = melData[x.clamp(0, melData.length - 1)];
-        final intensity = _normalizeMelValue(melValue);
+        final intensity = melValue.clamp(0.0, 1.0);
         final color = colorMap[(intensity * 255).clamp(0, 255).round()];
         
         final rect = Rect.fromLTWH(
@@ -160,12 +145,6 @@ class SpectrogramPainter extends CustomPainter {
         canvas.drawRect(rect, paint);
       }
     }
-  }
-  
-  double _normalizeMelValue(double melValue) {
-    final clampedValue = melValue.clamp(0.000001, 1.0);
-    final logValue = (20 * math.log(clampedValue) / math.ln10 + 60) / 60.0;
-    return logValue.clamp(0.0, 1.0);
   }
   
   @override

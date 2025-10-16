@@ -3,12 +3,15 @@ import 'package:provider/provider.dart';
 import 'audio_service.dart';
 
 class SettingsPanel extends StatefulWidget {
-  final VoidCallback? onClose;
-  
-  const SettingsPanel({Key? key, this.onClose}) : super(key: key);
-  
+  final VoidCallback onClose;
+
+  const SettingsPanel({
+    super.key,
+    required this.onClose,
+  });
+
   @override
-  _SettingsPanelState createState() => _SettingsPanelState();
+  State<SettingsPanel> createState() => _SettingsPanelState();
 }
 
 class _SettingsPanelState extends State<SettingsPanel> {
@@ -34,7 +37,7 @@ class _SettingsPanelState extends State<SettingsPanel> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
+                  const Text(
                     'Settings',
                     style: TextStyle(
                       color: Colors.white,
@@ -43,7 +46,7 @@ class _SettingsPanelState extends State<SettingsPanel> {
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.close, color: Colors.white),
+                    icon: const Icon(Icons.close, color: Colors.white),
                     onPressed: widget.onClose,
                   ),
                 ],
@@ -75,7 +78,7 @@ class _SettingsPanelState extends State<SettingsPanel> {
                 children: [
                   TextButton(
                     onPressed: widget.onClose,
-                    child: Text('Close', style: TextStyle(color: Colors.white)),
+                    child: const Text('Close', style: TextStyle(color: Colors.white)),
                   ),
                 ],
               ),
@@ -110,7 +113,7 @@ class _SettingsPanelState extends State<SettingsPanel> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
+              const Text(
                 'GPU Acceleration (OpenGL)',
                 style: TextStyle(color: Colors.white),
               ),
@@ -119,7 +122,18 @@ class _SettingsPanelState extends State<SettingsPanel> {
                 onChanged: (value) {
                   audioService.setUseOpenGL(value);
                 },
-                activeColor: Colors.blue,
+                trackColor: WidgetStateProperty.resolveWith<Color?>((states) {
+                  if (states.contains(WidgetState.selected)) {
+                    return Colors.blue.withValues(alpha: 0.5);
+                  }
+                  return null;
+                }),
+                thumbColor: WidgetStateProperty.resolveWith<Color?>((states) {
+                  if (states.contains(WidgetState.selected)) {
+                    return Colors.blue;
+                  }
+                  return null;
+                }),
               ),
             ],
           ),
@@ -176,8 +190,8 @@ class _SettingsPanelState extends State<SettingsPanel> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: Colors.grey[400], fontSize: 12)),
-          Text(value, style: TextStyle(color: Colors.white, fontSize: 12)),
+          Text(label, style: TextStyle(color: Colors.grey[400], fontSize: 10)),
+          Text(value, style: const TextStyle(color: Colors.white, fontSize: 12)),
         ],
       ),
     );
@@ -189,7 +203,7 @@ class _SettingsPanelState extends State<SettingsPanel> {
       initialData: audioService.processingStats,
       builder: (context, snapshot) {
         final stats = snapshot.data;
-        if (stats == null) return SizedBox.shrink();
+        if (stats == null) return const SizedBox.shrink();
         
         return Container(
           padding: const EdgeInsets.all(12),
@@ -200,12 +214,12 @@ class _SettingsPanelState extends State<SettingsPanel> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildPerformanceRow('FPS', '${stats.currentFps.toStringAsFixed(1)}'),
+              _buildPerformanceRow('FPS', stats.currentFps.toStringAsFixed(1)),
               _buildPerformanceRow('Frame Time', '${stats.lastFrameTime.toStringAsFixed(1)} ms'),
               _buildPerformanceRow('Avg Processing', '${(stats.averageProcessingTime / 1000).toStringAsFixed(2)} ms'),
-              _buildPerformanceRow('Frames Processed', '${stats.framesProcessed}'),
-              _buildPerformanceRow('Frames Dropped', '${stats.framesDropped}'),
-              _buildPerformanceRow('Texture Updates', '${stats.textureUpdates}'),
+              _buildPerformanceRow('Frames Processed', stats.framesProcessed.toString()),
+              _buildPerformanceRow('Frames Dropped', stats.framesDropped.toString()),
+              _buildPerformanceRow('Texture Updates', stats.textureUpdates.toString()),
               const SizedBox(height: 8),
               _buildPerformanceRow('Audio Level', '${stats.audioLevel.toStringAsFixed(1)} dB'),
             ],
@@ -221,8 +235,8 @@ class _SettingsPanelState extends State<SettingsPanel> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: Colors.grey[400], fontSize: 11)),
-          Text(value, style: TextStyle(color: Colors.white, fontSize: 11)),
+          Text(label, style: TextStyle(color: Colors.grey[400], fontSize: 10)),
+          Text(value, style: const TextStyle(color: Colors.white, fontSize: 11)),
         ],
       ),
     );
@@ -241,7 +255,7 @@ class _SettingsPanelState extends State<SettingsPanel> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Advanced', style: TextStyle(color: Colors.blue)),
+              const Text('Advanced', style: TextStyle(color: Colors.blue)),
               Icon(
                 _showAdvanced ? Icons.expand_less : Icons.expand_more,
                 color: Colors.blue,
@@ -261,7 +275,7 @@ class _SettingsPanelState extends State<SettingsPanel> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Color Maps',
                   style: TextStyle(color: Colors.white, fontSize: 12),
                 ),
@@ -276,7 +290,7 @@ class _SettingsPanelState extends State<SettingsPanel> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                Text(
+                const Text(
                   'Texture Range',
                   style: TextStyle(color: Colors.white, fontSize: 12),
                 ),
@@ -288,10 +302,10 @@ class _SettingsPanelState extends State<SettingsPanel> {
                         decoration: InputDecoration(
                           labelText: 'Min',
                           labelStyle: TextStyle(color: Colors.grey[400], fontSize: 10),
-                          border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          border: const OutlineInputBorder(),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         ),
-                        style: TextStyle(color: Colors.white, fontSize: 10),
+                        style: const TextStyle(color: Colors.white, fontSize: 10),
                         keyboardType: TextInputType.number,
                         onSubmitted: (value) {
                           // TODO: Implement min range setting
@@ -304,10 +318,10 @@ class _SettingsPanelState extends State<SettingsPanel> {
                         decoration: InputDecoration(
                           labelText: 'Max',
                           labelStyle: TextStyle(color: Colors.grey[400], fontSize: 10),
-                          border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          border: const OutlineInputBorder(),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         ),
-                        style: TextStyle(color: Colors.white, fontSize: 10),
+                        style: const TextStyle(color: Colors.white, fontSize: 10),
                         keyboardType: TextInputType.number,
                         onSubmitted: (value) {
                           // TODO: Implement max range setting
@@ -329,13 +343,13 @@ class _SettingsPanelState extends State<SettingsPanel> {
       onPressed: () {
         // TODO: Implement color map setting
       },
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        backgroundColor: Colors.grey[700],
+      ),
       child: Text(
         name,
-        style: TextStyle(color: Colors.blue, fontSize: 10),
-      ),
-      style: TextButton.styleFrom(
-        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        backgroundColor: Colors.grey[700],
+        style: const TextStyle(color: Colors.blue, fontSize: 10),
       ),
     );
   }

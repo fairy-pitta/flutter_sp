@@ -46,12 +46,12 @@ android {
         }
     }
     
-    // externalNativeBuild {
-    //     cmake {
-    //         path = file("src/main/cpp/CMakeLists.txt")
-    //         version = "3.31.4"
-    //     }
-    // }
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.31.0"
+        }
+    }
 
     buildTypes {
         release {

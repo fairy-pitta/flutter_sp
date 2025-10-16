@@ -74,9 +74,6 @@ typedef UpdateTextureColumn = int Function(Pointer<Float> melData, int dataSize)
 typedef GetTextureIdFunc = Uint32 Function();
 typedef GetTextureId = int Function();
 
-typedef GetTextureDataFunc = Int32 Function(Pointer<Uint8> buffer, Int32 bufferSize);
-typedef GetTextureData = int Function(Pointer<Uint8> buffer, int bufferSize);
-
 typedef SetTextureColorMapFunc = Int32 Function(Int32 colorMapType);
 typedef SetTextureColorMap = int Function(int colorMapType);
 
@@ -98,7 +95,6 @@ class NativeBridgeReal {
   static InitTextureRenderer? _initTextureRenderer;
   static UpdateTextureColumn? _updateTextureColumn;
   static GetTextureId? _getTextureId;
-  static GetTextureData? _getTextureData;
   static SetTextureColorMap? _setTextureColorMap;
   static SetTextureMinMax? _setTextureMinMax;
   
@@ -135,7 +131,6 @@ class NativeBridgeReal {
     _initTextureRenderer = _lib!.lookupFunction<InitTextureRendererFunc, InitTextureRenderer>('init_texture_renderer');
     _updateTextureColumn = _lib!.lookupFunction<UpdateTextureColumnFunc, UpdateTextureColumn>('update_texture_column');
     _getTextureId = _lib!.lookupFunction<GetTextureIdFunc, GetTextureId>('get_texture_id');
-    _getTextureData = _lib!.lookupFunction<GetTextureDataFunc, GetTextureData>('get_texture_data');
     _setTextureColorMap = _lib!.lookupFunction<SetTextureColorMapFunc, SetTextureColorMap>('set_texture_color_map');
     _setTextureMinMax = _lib!.lookupFunction<SetTextureMinMaxFunc, SetTextureMinMax>('set_texture_min_max');
   }

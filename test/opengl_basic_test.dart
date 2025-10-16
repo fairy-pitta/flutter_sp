@@ -60,11 +60,20 @@ void main() {
       final audioService = AudioService();
       await audioService.initialize();
       
+      // Check if native library is available
+      NativeBridgeWrapper.checkRealAvailability();
+      final nativeAvailable = NativeBridgeWrapper.realAvailable;
+      
       // Enable OpenGL
       audioService.setUseOpenGL(true);
-      expect(audioService.useOpenGL, isTrue);
+      if (nativeAvailable) {
+        expect(audioService.useOpenGL, isTrue);
+      } else {
+        // When native library is unavailable, setUseOpenGL(true) should reset to false
+        expect(audioService.useOpenGL, isFalse);
+      }
       
-      // Disable OpenGL
+      // Disable OpenGL (should always work)
       audioService.setUseOpenGL(false);
       expect(audioService.useOpenGL, isFalse);
       

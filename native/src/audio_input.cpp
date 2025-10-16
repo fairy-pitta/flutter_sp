@@ -20,7 +20,7 @@ AudioInput::~AudioInput() {
             case Platform::IOS:
                 cleanupIOS();
                 break;
-            case Platform::ANDROID:
+            case Platform::Android:
                 cleanupAndroid();
                 break;
             case Platform::MOCK:
@@ -44,7 +44,7 @@ bool AudioInput::initialize() {
         case Platform::IOS:
             success = initializeIOS();
             break;
-        case Platform::ANDROID:
+        case Platform::Android:
             success = initializeAndroid();
             break;
         case Platform::MOCK:
@@ -271,7 +271,7 @@ const char* audioFormatToString(AudioFormat format) {
 const char* platformToString(Platform platform) {
     switch (platform) {
         case Platform::IOS: return "iOS";
-        case Platform::ANDROID: return "Android";
+        case Platform::Android: return "Android";
         case Platform::MOCK: return "Mock";
         default: return "Unknown";
     }

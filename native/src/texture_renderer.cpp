@@ -298,7 +298,16 @@ std::vector<uint8_t> TextureRenderer::getTextureData() const {
     
     if (!mockMode_ && textureId_ != 0) {
         glBindTexture(GL_TEXTURE_2D, textureId_);
-        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.data());
+        // OpenGL ES does not support glGetTexImage; use glReadPixels on the framebuffer
+        // Assuming texture is attached to the current framebuffer; if not, fallback
+        GLint prevFbo = 0;
+        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFbo);
+        if (prevFbo != 0) {
+            glReadPixels(0, 0, width_, height_, GL_RGBA, GL_UNSIGNED_BYTE, data.data());
+        } else {
+            // Fallback to internal texture data if no framebuffer is bound
+            data = textureData_;
+        }
     } else {
         // Fallback to internal texture data
         data = textureData_;

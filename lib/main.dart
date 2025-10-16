@@ -3,11 +3,17 @@ import 'package:provider/provider.dart';
 import 'audio_service.dart';
 import 'audio_visualizer.dart';
 import 'opengl_audio_visualizer.dart';
-import 'native_bridge_wrapper.dart';
 import 'settings_panel.dart';
 
 void main() {
-  runApp(const MelSpectrogramApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AudioService()),
+      ],
+      child: const MelSpectrogramApp(),
+    ),
+  );
 }
 
 class MelSpectrogramApp extends StatelessWidget {
@@ -22,10 +28,7 @@ class MelSpectrogramApp extends StatelessWidget {
         brightness: Brightness.dark,
         useMaterial3: true,
       ),
-      home: ChangeNotifierProvider(
-        create: (context) => AudioService(),
-        child: const MainScreen(),
-      ),
+      home: const MainScreen(),
     );
   }
 }
@@ -199,7 +202,13 @@ class _MainScreenState extends State<MainScreen> {
   void _showSettingsDialog() {
     showDialog(
       context: context,
-      builder: (context) => const SettingsPanel(),
+      builder: (context) {
+        return Dialog(
+          child: SettingsPanel(
+            onClose: () => Navigator.of(context).pop(),
+          ),
+        );
+      },
     );
   }
 }

@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'dart:ffi' as ffi;
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
 import 'package:ffi/ffi.dart';
 
 class OpenGLAudioVisualizer extends StatefulWidget {
@@ -44,13 +43,13 @@ class _OpenGLAudioVisualizerState extends State<OpenGLAudioVisualizer> {
   void _initializeNativeLibrary() {
     try {
       if (Platform.isAndroid) {
-        _nativeLib = ffi.DynamicLibrary.open('libflutter_sp.so');
+        _nativeLib = ffi.DynamicLibrary.open('libflutter_sp_native.so');
       } else if (Platform.isIOS) {
         _nativeLib = ffi.DynamicLibrary.process();
       } else if (Platform.isMacOS) {
-        _nativeLib = ffi.DynamicLibrary.open('libflutter_sp.dylib');
+        _nativeLib = ffi.DynamicLibrary.open('libflutter_sp_native.dylib');
       } else if (Platform.isWindows) {
-        _nativeLib = ffi.DynamicLibrary.open('flutter_sp.dll');
+        _nativeLib = ffi.DynamicLibrary.open('flutter_sp_native.dll');
       } else {
         _nativeLib = ffi.DynamicLibrary.process();
       }
@@ -123,34 +122,53 @@ class _OpenGLAudioVisualizerState extends State<OpenGLAudioVisualizer> {
   @override
   Widget build(BuildContext context) {
     if (_error != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, color: Colors.red, size: 48),
-            const SizedBox(height: 16),
-            Text(
-              'Error: $_error',
-              style: const TextStyle(color: Colors.red),
-              textAlign: TextAlign.center,
-            ),
-          ],
+      return SizedBox(
+        width: widget.width.toDouble(),
+        height: widget.height.toDouble(),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline, color: Colors.red, size: 24),
+              const SizedBox(height: 8),
+              Flexible(
+                child: Text(
+                  'Error: $_error',
+                  style: const TextStyle(color: Colors.red, fontSize: 12),
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
     
     if (!_isInitialized || _textureId == null) {
-      return const Center(
-        child: CircularProgressIndicator(),
+      return SizedBox(
+        width: widget.width.toDouble(),
+        height: widget.height.toDouble(),
+        child: const Center(
+          child: CircularProgressIndicator(),
+        ),
       );
     }
     
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey),
-        borderRadius: BorderRadius.circular(8),
+    return SizedBox(
+      width: widget.width.toDouble(),
+      height: widget.height.toDouble(),
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Texture(textureId: _textureId!),
+        ),
       ),
-      child: Texture(textureId: _textureId!),
     );
   }
   
